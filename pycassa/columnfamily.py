@@ -511,12 +511,12 @@ class ColumnFamily(object):
         _pack_name = self._pack_name
         _pack_value = self._pack_value
         if not self.super:
-            return map(lambda c, v: Mutation(self._make_cosc(_pack_name(c), _pack_value(v, c), timestamp, ttl)),
+            return map(lambda c: Mutation(self._make_cosc(_pack_name(c[0]), _pack_value(c[1], c[0]), timestamp, ttl)),
                        columns.iteritems())
         else:
             mut_list = []
             for super_col, subcs in columns.items():
-                subcols = map(lambda c, v: self._make_column(_pack_name(c), _pack_value(v, c), timestamp, ttl),
+                subcols = map(lambda c: self._make_column(_pack_name(c[0]), _pack_value(c[1], c[0]), timestamp, ttl),
                               subcs.iteritems())
                 mut_list.append(Mutation(self._make_cosc(_pack_name(super_col, True), subcols)))
             return mut_list
