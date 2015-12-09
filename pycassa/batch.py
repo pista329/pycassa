@@ -77,9 +77,10 @@ or when sending it:
     >>> b.send(atomic=True)
 
 """
+from __future__ import absolute_import
 
 import threading
-from pycassa.cassandra.ttypes import (ConsistencyLevel, Deletion, Mutation, SlicePredicate)
+from .cassandra.ttypes import (ConsistencyLevel, Deletion, Mutation, SlicePredicate)
 
 __all__ = ['Mutator', 'CfMutator']
 

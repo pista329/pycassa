@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 import six
 if six.PY2:
     from six import binary_type as bytes
@@ -10,7 +11,7 @@ from .connection import (Connection, default_socket_factory,
 from .cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
                                 SchemaDisagreementException
 from . import marshal
-from . import types as types
+from . import types
 
 _DEFAULT_TIMEOUT = 30
 _SAMPLE_PERIOD = 0.25
@@ -205,7 +206,7 @@ class SystemManager(object):
                       cf_defs=[],
                       durable_writes=durable_writes)
 
-        for k, v in ks_kwargs.iteritems():
+        for k, v in ks_kwargs.items():
             setattr(ksdef, k, v)
 
         self._system_add_keyspace(ksdef)
@@ -240,7 +241,7 @@ class SystemManager(object):
         if durable_writes is not None:
             ksdef.durable_writes = durable_writes
 
-        for k, v in ks_kwargs.iteritems():
+        for k, v in ks_kwargs.items():
             setattr(ksdef, k, v)
 
         self._system_update_keyspace(ksdef)
@@ -275,7 +276,7 @@ class SystemManager(object):
         if cf_kwargs.pop('super', False):
             cf_kwargs.setdefault('column_type', 'Super')
 
-        for k, v in cf_kwargs.iteritems():
+        for k, v in cf_kwargs.items():
             v = self._convert_class_attrs(k, v)
             setattr(cfdef, k, v)
 
@@ -298,7 +299,7 @@ class SystemManager(object):
         self._conn.set_keyspace(keyspace)
         cfdef = self.get_keyspace_column_families(keyspace)[column_family]
 
-        for k, v in cf_kwargs.iteritems():
+        for k, v in cf_kwargs.items():
             v = self._convert_class_attrs(k, v)
             setattr(cfdef, k, v)
 

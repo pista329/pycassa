@@ -6,6 +6,11 @@
 #  options string: py:new_style
 #
 
+try:
+    xrange
+except NameError:
+    xrange = range
+
 from thrift.Thrift import TType, TMessageType, TException, TApplicationException
 
 from thrift.transport import TTransport

@@ -4,6 +4,7 @@ manipulation of data inside Cassandra.
 
 .. seealso:: :mod:`pycassa.columnfamilymap`
 """
+from __future__ import absolute_import
 
 import six
 import time
@@ -19,17 +20,17 @@ from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
     SlicePredicate, SliceRange, SuperColumn, KeyRange,\
     IndexExpression, IndexClause, CounterColumn, Mutation
-import pycassa.marshal as marshal
-import pycassa.types as types
-from pycassa.batch import CfMutator
+from . import marshal
+from . import types
+from .batch import CfMutator
 try:
     from collections import OrderedDict
 except ImportError:
-    from pycassa.util import OrderedDict # NOQA
+    from .util import OrderedDict # NOQA
 
 __all__ = ['gm_timestamp', 'ColumnFamily', 'PooledColumnFamily']
 
-class ColumnValidatorDict(MutableMapping):
+class ColumnValidatorDict(dict, MutableMapping):
 
     def __init__(self, other_dict={}, name_packer=None, name_unpacker=None):
         self.name_packer = name_packer or (lambda x: x)
@@ -62,6 +63,12 @@ class ColumnValidatorDict(MutableMapping):
         del self.type_map[packed_item]
         del self.packers[packed_item]
         del self.unpackers[packed_item]
+
+    #def __iter__(self):
+    #    return iter(self)
+    #
+    #def __len__(self):
+    #    return len(self)
 
     def keys(self):
         return map(self.name_unpacker, self.type_map.keys())
@@ -294,7 +301,7 @@ class ColumnFamily(object):
                              "dict_class", "buffer_size", "autopack_names",
                              "autopack_values", "autopack_keys",
                              "retry_counter_mutations")
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if k in recognized_kwargs:
                 setattr(self, k, v)
             else:
@@ -512,12 +519,12 @@ class ColumnFamily(object):
         _pack_value = self._pack_value
         if not self.super:
             return map(lambda c: Mutation(self._make_cosc(_pack_name(c[0]), _pack_value(c[1], c[0]), timestamp, ttl)),
-                       columns.iteritems())
+                       six.iteritems(columns))
         else:
             mut_list = []
             for super_col, subcs in columns.items():
                 subcols = map(lambda c: self._make_column(_pack_name(c[0]), _pack_value(c[1], c[0]), timestamp, ttl),
-                              subcs.iteritems())
+                              six.iteritems(subcs))
                 mut_list.append(Mutation(self._make_cosc(_pack_name(super_col, True), subcols)))
             return mut_list
 
@@ -786,7 +793,7 @@ class ColumnFamily(object):
             ret[key] = None
 
         empty_keys = []
-        for packed_key, columns in keymap.iteritems():
+        for packed_key, columns in six.iteritems(keymap):
             unpacked_key = self._unpack_key(packed_key)
             if len(columns) > 0:
                 ret[unpacked_key] = self._cosc_to_dict(columns, include_timestamp, include_ttl)
@@ -875,7 +882,7 @@ class ColumnFamily(object):
         for key in keys:
             ret[key] = None
 
-        for packed_key, count in keymap.iteritems():
+        for packed_key, count in six.iteritems(keymap):
             ret[self._unpack_key(packed_key)] = count
 
         return ret
@@ -1041,7 +1048,7 @@ class ColumnFamily(object):
 
         cf = self.column_family
         mutations = {}
-        for key, columns in rows.iteritems():
+        for key, columns in six.iteritems(rows):
             packed_key = self._pack_key(key)
             mut_list = self._make_mutation_list(columns, timestamp, ttl)
             mutations[packed_key] = {cf: mut_list}

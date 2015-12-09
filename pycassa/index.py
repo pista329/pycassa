@@ -28,8 +28,9 @@ above 1970 and a state value of 'Utah'.
              and :meth:`~pycassa.system_manager.SystemManager.drop_index()`
 
 """
+from __future__ import absolute_import
 
-from pycassa.cassandra.ttypes import IndexClause, IndexExpression,\
+from .cassandra.ttypes import IndexClause, IndexExpression,\
                                      IndexOperator
 
 __all__ = ['create_index_clause', 'create_index_expression', 'EQ', 'GT', 'GTE',

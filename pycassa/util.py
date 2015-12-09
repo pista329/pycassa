@@ -3,6 +3,7 @@ A combination of utilities used internally by pycassa and utilities
 available for use by others working with pycassa.
 
 """
+from __future__ import absolute_import
 
 import six
 if six.PY2:
@@ -254,6 +255,9 @@ if six.PY2:
     from UserDict import DictMixin as MutableMapping
 else:
     from collections import MutableMapping
+    MutableMapping.iteritems = MutableMapping.items
+    MutableMapping.iterkeys = MutableMapping.keys
+    MutableMapping.itervalues = MutableMapping.values
 
 class OrderedDict(dict, MutableMapping):
     """ A dictionary which maintains the insertion order of keys. """

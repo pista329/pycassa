@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import six
 import struct
 
@@ -11,8 +13,8 @@ from thrift.transport.TTransport import (TTransportBase, CReadableTransport,
         TTransportException)
 from thrift.protocol import TBinaryProtocol
 
-from pycassa.cassandra import Cassandra
-from pycassa.cassandra.ttypes import AuthenticationRequest
+from .cassandra import Cassandra
+from .cassandra.ttypes import AuthenticationRequest
 
 DEFAULT_SERVER = 'localhost:9160'
 DEFAULT_PORT = 9160

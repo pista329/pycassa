@@ -10,10 +10,11 @@ useful when you have one "object" per row.
              types.
 
 """
+from __future__ import absolute_import
 
-from pycassa.types import CassandraType
-from pycassa.columnfamily import ColumnFamily
-import pycassa.util as util
+from .types import CassandraType
+from .columnfamily import ColumnFamily
+from . import util
 import inspect
 
 __all__ = ['ColumnFamilyMap']

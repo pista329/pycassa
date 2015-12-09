@@ -1,4 +1,6 @@
-import pycassa_logger
+from __future__ import absolute_import
+
+from . import pycassa_logger
 import logging
 import threading
 import functools

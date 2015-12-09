@@ -20,11 +20,12 @@ be defined as follows:
     ...        return int(strval)
 
 """
+from __future__ import absolute_import
 
 import calendar
 from datetime import datetime
 
-import pycassa.marshal as marshal
+from . import marshal
 
 __all__ = ('CassandraType', 'BytesType', 'LongType', 'IntegerType',
            'AsciiType', 'UTF8Type', 'TimeUUIDType', 'LexicalUUIDType',

@@ -7,6 +7,11 @@
 #
 from __future__ import absolute_import
 
+try:
+    xrange
+except NameError:
+    xrange = range
+
 from thrift.Thrift import TType, TMessageType, TException, TApplicationException
 from .ttypes import *
 from thrift.Thrift import TProcessor
