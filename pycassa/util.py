@@ -330,9 +330,9 @@ class OrderedDict(dict, MutableMapping):
     pop = MutableMapping.pop
     values = MutableMapping.values
     items = MutableMapping.items
-    iterkeys = MutableMapping.keys #iterkeys
-    itervalues = MutableMapping.values #itervalues
-    iteritems = MutableMapping.items #iteritems
+    iterkeys = MutableMapping.iterkeys
+    itervalues = MutableMapping.itervalues
+    iteritems = MutableMapping.iteritems
 
     def __repr__(self):
         if not self:
