@@ -30,7 +30,7 @@ except ImportError:
 
 __all__ = ['gm_timestamp', 'ColumnFamily', 'PooledColumnFamily']
 
-class ColumnValidatorDict(dict, MutableMapping):
+class ColumnValidatorDict(MutableMapping):
 
     def __init__(self, other_dict={}, name_packer=None, name_unpacker=None):
         self.name_packer = name_packer or (lambda x: x)
@@ -64,11 +64,10 @@ class ColumnValidatorDict(dict, MutableMapping):
         del self.packers[packed_item]
         del self.unpackers[packed_item]
 
-    #def __iter__(self):
-    #    return iter(self)
-    #
-    #def __len__(self):
-    #    return len(self)
+    def __iter__(self):
+        return iter(self.__dict__)
+    def __len__(self):
+        return len(self.__dict__)
 
     def keys(self):
         return map(self.name_unpacker, self.type_map.keys())
