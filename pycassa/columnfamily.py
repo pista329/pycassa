@@ -5,9 +5,15 @@ manipulation of data inside Cassandra.
 .. seealso:: :mod:`pycassa.columnfamilymap`
 """
 
+import six
 import time
 import struct
-from UserDict import DictMixin
+
+if six.PY2:
+    from UserDict import DictMixin as MutableMapping
+    from six import binary_type as bytes
+else:
+    from collections import MutableMapping
 
 from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
@@ -23,7 +29,7 @@ except ImportError:
 
 __all__ = ['gm_timestamp', 'ColumnFamily', 'PooledColumnFamily']
 
-class ColumnValidatorDict(DictMixin):
+class ColumnValidatorDict(MutableMapping):
 
     def __init__(self, other_dict={}, name_packer=None, name_unpacker=None):
         self.name_packer = name_packer or (lambda x: x)
@@ -413,7 +419,7 @@ class ColumnFamily(object):
             return
 
         if not self.autopack_names:
-            if not isinstance(value, basestring):
+            if not isinstance(value, (str, bytes)):
                 raise TypeError("A str or unicode column name was expected, " +
                                 "but %s was received instead (%s)"
                                 % (value.__class__.__name__, str(value)))
@@ -455,7 +461,7 @@ class ColumnFamily(object):
             return
 
         if not self.autopack_values:
-            if not isinstance(value, basestring):
+            if not isinstance(value, (str, bytes)):
                 raise TypeError("A str or unicode column value was expected for " +
                                 "column '%s', but %s was received instead (%s)"
                                 % (str(col_name), value.__class__.__name__, str(value)))
@@ -505,12 +511,12 @@ class ColumnFamily(object):
         _pack_name = self._pack_name
         _pack_value = self._pack_value
         if not self.super:
-            return map(lambda (c, v): Mutation(self._make_cosc(_pack_name(c), _pack_value(v, c), timestamp, ttl)),
+            return map(lambda c, v: Mutation(self._make_cosc(_pack_name(c), _pack_value(v, c), timestamp, ttl)),
                        columns.iteritems())
         else:
             mut_list = []
             for super_col, subcs in columns.items():
-                subcols = map(lambda (c, v): self._make_column(_pack_name(c), _pack_value(v, c), timestamp, ttl),
+                subcols = map(lambda c, v: self._make_column(_pack_name(c), _pack_value(v, c), timestamp, ttl),
                               subcs.iteritems())
                 mut_list.append(Mutation(self._make_cosc(_pack_name(super_col, True), subcols)))
             return mut_list

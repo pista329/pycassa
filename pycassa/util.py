@@ -4,6 +4,13 @@ available for use by others working with pycassa.
 
 """
 
+import six
+if six.PY2:
+    from __builtin__ import int
+else:
+    from builtins import int
+    from builtins import int as long
+
 import random
 import uuid
 import calendar
@@ -76,18 +83,18 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
 
     # 0x01b21dd213814000 is the number of 100-ns intervals between the
     # UUID epoch 1582-10-15 00:00:00 and the Unix epoch 1970-01-01 00:00:00.
-    timestamp = int(microseconds * 10) + 0x01b21dd213814000L
+    timestamp = int(microseconds * 10) + int(0x01b21dd213814000)
 
-    time_low = timestamp & 0xffffffffL
-    time_mid = (timestamp >> 32L) & 0xffffL
-    time_hi_version = (timestamp >> 48L) & 0x0fffL
+    time_low = timestamp & int(0xffffffff)
+    time_mid = (timestamp >> int(32)) & int(0xffff)
+    time_hi_version = (timestamp >> int(48)) & int(0x0fff)
 
     if randomize:
         rand_bits = random.getrandbits(8 + 8 + 48)
-        clock_seq_low = rand_bits & 0xffL  # 8 bits, no offset
+        clock_seq_low = rand_bits & int(0xff)  # 8 bits, no offset
         # keep the first two bits as 10 for the uuid variant
-        clock_seq_hi_variant = 0b10000000 | (0b00111111 & ((rand_bits & 0xff00L) >> 8))  # 8 bits, 8 offset
-        node = (rand_bits & 0xffffffffffff0000L) >> 16  # 48 bits, 16 offset
+        clock_seq_hi_variant = 0b10000000 | (0b00111111 & ((rand_bits & int(0xff00)) >> 8))  # 8 bits, 8 offset
+        node = (rand_bits & int(0xffffffffffff0000)) >> 16  # 48 bits, 16 offset
     else:
         # In the event of a timestamp tie, Cassandra compares the two
         # byte arrays directly. This is a *signed* comparison of each byte
@@ -99,10 +106,10 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
         # positive byte range for this particular byte.
         if lowest_val:
             # Make the lowest value UUID with the same timestamp
-            clock_seq_low = 0x80L
-            clock_seq_hi_variant = 0 & 0x80L # The two most significant bits
+            clock_seq_low = int(0x80)
+            clock_seq_hi_variant = 0 & int(0x80) # The two most significant bits
                                              # will be 10 for the variant
-            node = 0x808080808080L # 48 bits
+            node = int(0x808080808080) # 48 bits
         else:
             # Make the highest value UUID with the same timestamp
 
@@ -111,10 +118,10 @@ def convert_time_to_uuid(time_arg, lowest_val=True, randomize=False):
             # uuid for the same microsecond, add 900ns
             timestamp = int(timestamp + 9)
 
-            clock_seq_low = 0x7fL
-            clock_seq_hi_variant = 0xbfL # The two most significant bits will
+            clock_seq_low = int(0x7f)
+            clock_seq_hi_variant = int(0xbf) # The two most significant bits will
                                          # 10 for the variant
-            node = 0x7f7f7f7f7f7fL # 48 bits
+            node = int(0x7f7f7f7f7f7f) # 48 bits
     return uuid.UUID(fields=(time_low, time_mid, time_hi_version,
                         clock_seq_hi_variant, clock_seq_low, node), version=1)
 
@@ -130,7 +137,7 @@ def convert_uuid_to_time(uuid_arg):
 
     """
     ts = uuid_arg.get_time()
-    return (ts - 0x01b21dd213814000L)/1e7
+    return (ts - int(0x01b21dd213814000))/1e7
 
 # Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Michael Bayer mike_mp@zzzcomputing.com
 #
@@ -243,9 +250,12 @@ def as_interface(obj, cls=None, methods=None, required=None):
 #     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #     OTHER DEALINGS IN THE SOFTWARE.
 
-from UserDict import DictMixin
+if six.PY2:
+    from UserDict import DictMixin as MutableMapping
+else:
+    from collections import MutableMapping
 
-class OrderedDict(dict, DictMixin):
+class OrderedDict(dict, MutableMapping):
     """ A dictionary which maintains the insertion order of keys. """
 
     def __init__(self, *args, **kwds):
@@ -315,14 +325,14 @@ class OrderedDict(dict, DictMixin):
     def keys(self):
         return list(self)
 
-    setdefault = DictMixin.setdefault
-    update = DictMixin.update
-    pop = DictMixin.pop
-    values = DictMixin.values
-    items = DictMixin.items
-    iterkeys = DictMixin.iterkeys
-    itervalues = DictMixin.itervalues
-    iteritems = DictMixin.iteritems
+    setdefault = MutableMapping.setdefault
+    update = MutableMapping.update
+    pop = MutableMapping.pop
+    values = MutableMapping.values
+    items = MutableMapping.items
+    iterkeys = MutableMapping.keys #iterkeys
+    itervalues = MutableMapping.values #itervalues
+    iteritems = MutableMapping.items #iteritems
 
     def __repr__(self):
         if not self:

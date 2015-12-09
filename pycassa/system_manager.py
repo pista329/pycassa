@@ -1,11 +1,16 @@
+from __future__ import absolute_import
+import six
+if six.PY2:
+    from six import binary_type as bytes
+
 import time
 
-from pycassa.connection import (Connection, default_socket_factory,
-        default_transport_factory)
-from pycassa.cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
-                                     SchemaDisagreementException
-import pycassa.marshal as marshal
-import pycassa.types as types
+from .connection import (Connection, default_socket_factory,
+                            default_transport_factory)
+from .cassandra.ttypes import IndexType, KsDef, CfDef, ColumnDef,\
+                                SchemaDisagreementException
+from . import marshal
+from . import types as types
 
 _DEFAULT_TIMEOUT = 30
 _SAMPLE_PERIOD = 0.25
@@ -322,7 +327,7 @@ class SystemManager(object):
         if classname:
             if isinstance(classname, types.CassandraType):
                 s = str(classname)
-            elif isinstance(classname, basestring):
+            elif isinstance(classname, (str, bytes)):
                 s = classname
             else:
                 raise TypeError(

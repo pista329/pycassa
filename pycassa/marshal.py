@@ -3,6 +3,14 @@ Tools for marshalling and unmarshalling data stored
 in Cassandra.
 """
 
+import six
+if six.PY2:
+    from __builtin__ import int
+    from six import binary_type as bytes
+else:
+    from builtins import int
+    from builtins import int as long
+
 import uuid
 import struct
 import calendar
@@ -313,7 +321,7 @@ def packer_for(typestr):
 
     else: # data_type == 'BytesType' or something unknown
         def pack_bytes(v, _=None):
-            if not isinstance(v, basestring):
+            if not isinstance(v, (str, bytes)):
                 raise TypeError("A str or unicode value was expected, " +
                                 "but %s was received instead (%s)"
                                 % (v.__class__.__name__, str(v)))

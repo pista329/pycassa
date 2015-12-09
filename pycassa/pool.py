@@ -1,6 +1,8 @@
 """ Connection pooling for Cassandra connections. """
 
+from __future__ import absolute_import
 from __future__ import with_statement
+import six
 
 import time
 import threading
@@ -11,15 +13,18 @@ import sys
 if 'gevent.monkey' in sys.modules:
     from gevent import queue as Queue
 else:
-    import Queue  # noqa
+    if six.PY2:
+        import Queue  # noqa
+    else:
+        import queue as Queue
 
 from thrift import Thrift
 from thrift.transport.TTransport import TTransportException
-from connection import (Connection, default_socket_factory,
+from .connection import (Connection, default_socket_factory,
         default_transport_factory)
-from logging.pool_logger import PoolLogger
-from util import as_interface
-from cassandra.ttypes import TimedOutException, UnavailableException
+from .logging.pool_logger import PoolLogger
+from .util import as_interface
+from .cassandra.ttypes import TimedOutException, UnavailableException
 
 _BASE_BACKOFF = 0.01
 
@@ -134,7 +139,7 @@ class ConnectionWrapper(Connection):
                 raise
             except (TimedOutException, UnavailableException,
                     TTransportException,
-                    socket.error, IOError, EOFError), exc:
+                    socket.error, IOError, EOFError) as exc:
                 self._pool._notify_on_failure(exc, server=self.server, connection=self)
 
                 self.close()
@@ -423,7 +428,7 @@ class ConnectionPool(object):
                 server = self._get_next_server()
                 wrapper = self._get_new_wrapper(server)
                 return wrapper
-            except (TTransportException, socket.error, IOError, EOFError), exc:
+            except (TTransportException, socket.error, IOError, EOFError) as exc:
                 self._notify_on_failure(exc, server)
                 failure_count += 1
         raise AllServersUnavailable('An attempt was made to connect to each of the servers ' +
