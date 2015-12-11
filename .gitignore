@@ -10,3 +10,4 @@ include/
 lib/
 man/
 pycassa.egg-info/
+.DS_Store
