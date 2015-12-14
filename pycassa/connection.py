@@ -18,7 +18,6 @@ class CReadableTransport(object):
 
 import thriftpy
 import thriftpy.transport
-import thriftpy.transport
 import thriftpy.protocol.binary
 
 thriftpy.protocol.binary.TBinaryProtocol.writeMessageBegin = thriftpy.protocol.binary.TBinaryProtocol.write_message_begin
