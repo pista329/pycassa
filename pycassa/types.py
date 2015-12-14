@@ -20,7 +20,14 @@ be defined as follows:
     ...        return int(strval)
 
 """
+
 from __future__ import absolute_import
+import six
+
+if six.PY2:
+    pass
+else:
+    from builtins import int as long
 
 import calendar
 from datetime import datetime
@@ -287,7 +294,7 @@ class DynamicCompositeType(CassandraType):
 
     def __str__(self):
         aliases = []
-        for k, v in self.aliases.iteritems():
+        for k, v in six.iteritems(self.aliases):
             aliases.append(k + '=>' + str(v))
         return "DynamicCompositeType(" + ", ".join(aliases) + ")"
 

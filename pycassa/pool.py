@@ -18,8 +18,8 @@ else:
     else:
         import queue as Queue
 
-from thrift import Thrift
-from thrift.transport.TTransport import TTransportException
+import thriftpy.thrift
+import thriftpy.transport
 from .connection import (Connection, default_socket_factory,
         default_transport_factory)
 from .logging.pool_logger import PoolLogger
@@ -132,13 +132,13 @@ class ConnectionWrapper(Connection):
                 result = f(self, *args, **kwargs)
                 self._retry_count = 0 # reset the count after a success
                 return result
-            except Thrift.TApplicationException:
+            except thriftpy.thrift.TApplicationException:
                 self.close()
                 self._pool._decrement_overflow()
                 self._pool._clear_current()
                 raise
             except (TimedOutException, UnavailableException,
-                    TTransportException,
+                    thriftpy.transport.TTransportException,
                     socket.error, IOError, EOFError) as exc:
                 self._pool._notify_on_failure(exc, server=self.server, connection=self)
 
@@ -428,7 +428,7 @@ class ConnectionPool(object):
                 server = self._get_next_server()
                 wrapper = self._get_new_wrapper(server)
                 return wrapper
-            except (TTransportException, socket.error, IOError, EOFError) as exc:
+            except (thriftpy.transport.TTransportException, socket.error, IOError, EOFError) as exc:
                 self._notify_on_failure(exc, server)
                 failure_count += 1
         raise AllServersUnavailable('An attempt was made to connect to each of the servers ' +
@@ -478,7 +478,9 @@ class ConnectionPool(object):
 
     def put(self, conn):
         """ Returns a connection to the pool. """
-        if not conn.transport.isOpen():
+        if hasattr(conn.transport, 'isOpen') and not conn.transport.isOpen():
+            return
+        if hasattr(conn.transport, 'is_open') and not conn.transport.is_open():
             return
 
         if self._pool_threadlocal:

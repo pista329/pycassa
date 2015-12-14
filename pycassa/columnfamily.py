@@ -16,7 +16,7 @@ if six.PY2:
 else:
     from collections import MutableMapping
 
-from pycassa.cassandra.ttypes import Column, ColumnOrSuperColumn,\
+from .cassandra.ttypes import Column, ColumnOrSuperColumn,\
     ColumnParent, ColumnPath, ConsistencyLevel, NotFoundException,\
     SlicePredicate, SliceRange, SuperColumn, KeyRange,\
     IndexExpression, IndexClause, CounterColumn, Mutation

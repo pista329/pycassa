@@ -8,12 +8,25 @@ if six.PY2:
 else:
     from io import StringIO
 
-from thrift.transport import TTransport, TSocket, TSSLSocket
-from thrift.transport.TTransport import (TTransportBase, CReadableTransport,
-        TTransportException)
-from thrift.protocol import TBinaryProtocol
+# Contribute to thriftpy
+class CReadableTransport(object):
+    @property
+    def cstringio_buf(self):
+      pass
+    def cstringio_refill(self, partialread, reqlen):
+      pass
 
-from .cassandra import Cassandra
+import thriftpy
+import thriftpy.transport
+import thriftpy.transport
+import thriftpy.protocol.binary
+
+thriftpy.protocol.binary.TBinaryProtocol.writeMessageBegin = thriftpy.protocol.binary.TBinaryProtocol.write_message_begin
+thriftpy.protocol.binary.TBinaryProtocol.writeMessageEnd = thriftpy.protocol.binary.TBinaryProtocol.write_message_end
+thriftpy.protocol.binary.TBinaryProtocol.readMessageBegin = thriftpy.protocol.binary.TBinaryProtocol.read_message_begin
+thriftpy.protocol.binary.TBinaryProtocol.readMessageEnd = thriftpy.protocol.binary.TBinaryProtocol.read_message_end
+
+from .cassandra.client import cassandra_thrift
 from .cassandra.ttypes import AuthenticationRequest
 
 DEFAULT_SERVER = 'localhost:9160'
@@ -24,17 +37,17 @@ def default_socket_factory(host, port):
     """
     Returns a normal :class:`TSocket` instance.
     """
-    return TSocket.TSocket(host, port)
+    return thriftpy.transport.TSocket(host, port)
 
 
 def default_transport_factory(tsocket, host, port):
     """
     Returns a normal :class:`TFramedTransport` instance wrapping `tsocket`.
     """
-    return TTransport.TFramedTransport(tsocket)
+    return thriftpy.transport.TFramedTransportFactory().get_transport(tsocket)
 
 
-class Connection(Cassandra.Client):
+class Connection(object):
     """Encapsulation of a client session."""
 
     def __init__(self, keyspace, server, framed_transport=True, timeout=None,
@@ -51,21 +64,67 @@ class Connection(Cassandra.Client):
         host = server[0]
         socket = socket_factory(host, int(port))
         if timeout is not None:
-            socket.setTimeout(timeout * 1000.0)
+            if hasattr(socket, "setTimeout"):
+                socket.setTimeout(timeout * 1000.0)
+            elif hasattr(socket, "set_timeout"):
+                socket.set_timeout(timeout * 1000.0)
         self.transport = transport_factory(socket, host, port)
-        protocol = TBinaryProtocol.TBinaryProtocolAccelerated(self.transport)
-        Cassandra.Client.__init__(self, protocol)
+        #protocol = TBinaryProtocol.TBinaryProtocolAccelerated(self.transport)
+        protocol = thriftpy.protocol.binary.TBinaryProtocol(self.transport)
         self.transport.open()
-
+        self.client = thriftpy.thrift.TClient(cassandra_thrift.Cassandra, protocol)
+        
         if credentials is not None:
             request = AuthenticationRequest(credentials=credentials)
             self.login(request)
-
+        
         self.set_keyspace(keyspace)
+
+    def __getattr__(self, name):
+        return getattr(self.client, name)
+
+    def get(self, *args, **kwargs):
+        return self.client.get(*args, **kwargs)
+    def get_slice(self, *args, **kwargs):
+        return self.client.get_slice(*args, **kwargs)
+    def multiget_slice(self, *args, **kwargs):
+        return self.client.multiget_slice(*args, **kwargs)
+    def get_count(self, *args, **kwargs):
+        return self.client.get_count(*args, **kwargs)
+    def multiget_count(self, *args, **kwargs):
+        return self.client.multiget_count(*args, **kwargs)
+
+    def get_range_slices(self, *args, **kwargs):
+        return self.client.get_range_slices(*args, **kwargs)
+    def get_indexed_slices(self, *args, **kwargs):
+        return self.client.get_indexed_slices(*args, **kwargs)
+    def batch_mutate(self, *args, **kwargs):
+        return self.client.batch_mutate(*args, **kwargs)
+    def add(self, *args, **kwargs):
+        return self.client.add(*args, **kwargs)
+
+    def insert(self, *args, **kwargs):
+        return self.client.insert(*args, **kwargs)
+    def remove(self, *args, **kwargs):
+        return self.client.remove(*args, **kwargs)
+    def remove_counter(self, *args, **kwargs):
+        return self.client.remove_counter(*args, **kwargs)
+    def truncate(self, *args, **kwargs):
+        return self.client.truncate(*args, **kwargs)
+    def describe_keyspace(self, *args, **kwargs):
+        return self.client.describe_keyspace(*args, **kwargs)
+
+    def atomic_batch_mutate(self, *args, **kwargs):
+        return self.client.atomic_batch_mutate(*args, **kwargs)
+
+    # For compatibility with rest pycassa code
+    def send_batch_mutate(self, *args, **kwargs):
+        return self.client.batch_mutate(*args, **kwargs)
+
 
     def set_keyspace(self, keyspace):
         if keyspace != self.keyspace:
-            Cassandra.Client.set_keyspace(self, keyspace)
+            self.client.set_keyspace(keyspace)
             self.keyspace = keyspace
 
     def close(self):
@@ -84,12 +143,13 @@ def make_ssl_socket_factory(ca_certs, validate=True):
         """
         Returns a :class:`TSSLSocket` instance.
         """
-        return TSSLSocket.TSSLSocket(host, port, ca_certs=ca_certs, validate=validate)
+        #return TSSLSocket.TSSLSocket(host, port, ca_certs=ca_certs, validate=validate)
+        return thriftpy.transport.TSocket(host, port)
 
     return ssl_socket_factory
 
 
-class TSaslClientTransport(TTransportBase, CReadableTransport):
+class TSaslClientTransport(thriftpy.transport.TTransportBase, CReadableTransport):
 
     START = 1
     OK = 2
@@ -121,12 +181,12 @@ class TSaslClientTransport(TTransportBase, CReadableTransport):
                 self.send_sasl_msg(self.OK, self.sasl.process(challenge))
             elif status == self.COMPLETE:
                 if not self.sasl.complete:
-                    raise TTransportException("The server erroneously indicated "
+                    raise thriftpy.transport.TTransportException("The server erroneously indicated "
                             "that SASL negotiation was complete")
                 else:
                     break
             else:
-                raise TTransportException("Bad SASL negotiation status: %d (%s)"
+                raise thriftpy.transport.TTransportException("Bad SASL negotiation status: %d (%s)"
                         % (status, challenge))
 
     def send_sasl_msg(self, status, body):
@@ -217,6 +277,6 @@ def make_sasl_transport_factory(credential_factory):
     def sasl_transport_factory(tsocket, host, port):
         sasl_kwargs = credential_factory(host, port)
         sasl_transport = TSaslClientTransport(tsocket, **sasl_kwargs)
-        return TTransport.TFramedTransport(sasl_transport)
+        return thriftpy.transport.framed.TFramedTransport(sasl_transport)
 
-    return sasl_transport_factory
+    retur

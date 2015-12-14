@@ -2,6 +2,8 @@
 Tools for marshalling and unmarshalling data stored
 in Cassandra.
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import six
 if six.PY2:
@@ -19,7 +21,8 @@ from decimal import Decimal
 
 import pycassa.util as util
 
-_number_types = frozenset((int, long, float))
+_number_types = frozenset(list(six.integer_types) + \
+                    list((float,)))
 
 
 def make_packer(fmt_string):
@@ -68,7 +71,7 @@ def _get_inner_types(typestr):
     """ Given a str like 'org.apache...CompositeType(LongType, DoubleType)',
     return a tuple of the inner types, like ('LongType', 'DoubleType') """
     internal_str = _get_inner_type(typestr)
-    return map(str.strip, internal_str.split(','))
+    return map(six.text_type.strip, internal_str.split(','))
 
 def _get_composite_name(typestr):
     types = map(extract_type_name, _get_inner_types(typestr))
@@ -183,7 +186,7 @@ def get_dynamic_composite_packer(typestr):
                     eoc = '\xff'
                 elif slice_start is False:
                     eoc = '\x01'
-            if isinstance(alias, str) and len(alias) == 1:
+            if isinstance(alias, six.binary_type) and len(alias) == 1:
                 header = '\x80' + alias
                 packer = packer_for(cassandra_types[alias])
             else:
@@ -321,7 +324,7 @@ def packer_for(typestr):
 
     else: # data_type == 'BytesType' or something unknown
         def pack_bytes(v, _=None):
-            if not isinstance(v, (str, bytes)):
+            if not isinstance(v, six.string_types):
                 raise TypeError("A str or unicode value was expected, " +
                                 "but %s was received instead (%s)"
                                 % (v.__class__.__name__, str(v)))

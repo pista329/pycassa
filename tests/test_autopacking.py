@@ -1,3 +1,14 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import six
+if six.PY2:
+    from __builtin__ import int
+    from six import binary_type as bytes
+else:
+    from builtins import int
+    from builtins import int as long
+
 from pycassa import NotFoundException
 from pycassa.pool import ConnectionPool
 from pycassa.columnfamily import ColumnFamily
@@ -100,52 +111,52 @@ class TestCFs(unittest.TestCase):
         # names to values.
         type_groups = []
 
-        long_cols = [1111111111111111L,
-                     2222222222222222L,
-                     3333333333333333L]
+        long_cols = [long(1111111111111111),
+                     long(2222222222222222),
+                     long(3333333333333333)]
         type_groups.append(self.make_group(TestCFs.cf_long, long_cols))
 
         int_cols = [1, 2, 3]
         type_groups.append(self.make_group(TestCFs.cf_int, int_cols))
-
+        
         big_int_cols = [1 + int(time.time() * 10 ** 6),
                         2 + int(time.time() * 10 ** 6),
                         3 + int(time.time() * 10 ** 6)]
         type_groups.append(self.make_group(TestCFs.cf_big_int, big_int_cols))
-
+        
         decimal_cols = [Decimal('1.123456789123456789'),
                         Decimal('2.123456789123456789'),
                         Decimal('3.123456789123456789')]
         type_groups.append(self.make_group(TestCFs.cf_decimal, decimal_cols))
-
+        
         time_cols = [TIME1, TIME2, TIME3]
         type_groups.append(self.make_group(TestCFs.cf_time, time_cols))
-
-        lex_cols = [uuid.UUID(bytes='aaa aaa aaa aaaa'),
-                    uuid.UUID(bytes='bbb bbb bbb bbbb'),
-                    uuid.UUID(bytes='ccc ccc ccc cccc')]
+        
+        lex_cols = [uuid.UUID(bytes=six.binary_type('aaa aaa aaa aaaa')),
+                    uuid.UUID(bytes=six.binary_type('bbb bbb bbb bbbb')),
+                    uuid.UUID(bytes=six.binary_type('ccc ccc ccc cccc'))]
         type_groups.append(self.make_group(TestCFs.cf_lex, lex_cols))
-
+        
         ascii_cols = ['aaaa', 'bbbb', 'cccc']
         type_groups.append(self.make_group(TestCFs.cf_ascii, ascii_cols))
-
+        
         utf8_cols = [u'a\u0020', u'b\u0020', u'c\u0020']
         type_groups.append(self.make_group(TestCFs.cf_utf8, utf8_cols))
-
-        bytes_cols = ['aaaa', 'bbbb', 'cccc']
+        
+        bytes_cols = [six.binary_type('aaaa'), six.binary_type('bbbb'), six.binary_type('cccc')]
         type_groups.append(self.make_group(TestCFs.cf_bytes, bytes_cols))
-
-        composite_cols = [(1, 'foo'), (2, 'bar'), (3, 'baz')]
+        
+        composite_cols = [(1, six.binary_type('foo')), (2, six.binary_type('bar')), (3, six.binary_type('baz'))]
         type_groups.append(self.make_group(TestCFs.cf_composite, composite_cols))
-
-        dynamic_composite_cols = [(('LongType', 1), ('BytesType', 'foo')), 
-                                  (('LongType', 2), ('BytesType', 'bar')), 
-                                  (('LongType', 3), ('BytesType', 'baz'))]
+        
+        dynamic_composite_cols = [(('LongType', 1), ('BytesType', six.binary_type('foo'))), 
+                                  (('LongType', 2), ('BytesType', six.binary_type('bar'))), 
+                                  (('LongType', 3), ('BytesType', six.binary_type('baz')))]
         type_groups.append(self.make_group(TestCFs.cf_dynamic_composite, dynamic_composite_cols))
-
-        dynamic_composite_alias_cols = [(('l', 1), ('b', 'foo')), 
-                                        (('l', 2), ('b', 'bar')), 
-                                        (('l', 3), ('b', 'baz'))]
+        
+        dynamic_composite_alias_cols = [(('l', 1), ('b', six.binary_type('foo'))), 
+                                        (('l', 2), ('b', six.binary_type('bar'))), 
+                                        (('l', 3), ('b', six.binary_type('baz')))]
         type_groups.append(self.make_group(TestCFs.cf_dynamic_composite, dynamic_composite_alias_cols))
 
         # Begin the actual inserting and getting	
@@ -291,9 +302,9 @@ class TestSuperCFs(unittest.TestCase):
         # names to values.
         type_groups = []
 
-        long_cols = [1111111111111111L,
-                     2222222222222222L,
-                     3333333333333333L]
+        long_cols = [long(1111111111111111),
+                     long(2222222222222222),
+                     long(3333333333333333)]
         type_groups.append(self.make_super_group(TestSuperCFs.cf_suplong, long_cols))
 
         int_cols = [1, 2, 3]
@@ -448,7 +459,7 @@ class TestSuperSubCFs(unittest.TestCase):
                 cf.remove(key)
 
     def make_sub_group(self, cf, cols):
-        diction = {123L: {cols[0]: VALS[0],
+        diction = {long(123): {cols[0]: VALS[0],
                           cols[1]: VALS[1],
                           cols[2]: VALS[2]}}
         return {'cf': cf, 'cols': cols, 'dict': diction}
@@ -460,9 +471,9 @@ class TestSuperSubCFs(unittest.TestCase):
         # names to values.
         type_groups = []
 
-        long_cols = [1111111111111111L,
-                     2222222222222222L,
-                     3333333333333333L]
+        long_cols = [long(1111111111111111),
+                     long(2222222222222222),
+                     long(3333333333333333)]
         type_groups.append(self.make_sub_group(TestSuperSubCFs.cf_suplong_sublong, long_cols))
 
         int_cols = [1, 2, 3]
@@ -498,21 +509,21 @@ class TestSuperSubCFs(unittest.TestCase):
             cf.insert(KEYS[0], gdict)
 
             assert_equal(cf.get(KEYS[0]), gdict)
-            assert_equal(cf.get(KEYS[0], columns=[123L]), gdict)
+            assert_equal(cf.get(KEYS[0], columns=[long(123)]), gdict)
 
             # A start and end that are the same
-            assert_equal(cf.get(KEYS[0], column_start=123L, column_finish=123L), gdict)
+            assert_equal(cf.get(KEYS[0], column_start=long(123), column_finish=long(123)), gdict)
 
-            res = cf.get(KEYS[0], super_column=123L, column_start=group.get('cols')[0])
-            assert_equal(res, gdict.get(123L))
+            res = cf.get(KEYS[0], super_column=long(123), column_start=group.get('cols')[0])
+            assert_equal(res, gdict.get(long(123)))
 
-            res = cf.get(KEYS[0], super_column=123L, column_finish=group.get('cols')[-1])
-            assert_equal(res, gdict.get(123L))
+            res = cf.get(KEYS[0], super_column=long(123), column_finish=group.get('cols')[-1])
+            assert_equal(res, gdict.get(long(123)))
 
             assert_equal(cf.get_count(KEYS[0]), 1)
 
             # Test removing rows
-            cf.remove(KEYS[0], super_column=123L)
+            cf.remove(KEYS[0], super_column=long(123))
             assert_equal(cf.get_count(KEYS[0]), 0)
 
             # Insert more than one row now
@@ -529,19 +540,19 @@ class TestSuperSubCFs(unittest.TestCase):
             res = cf.multiget(KEYS[2:])
             assert_equal(res.get(KEYS[2]), gdict)
 
-            res = cf.multiget(KEYS[:], columns=[123L])
+            res = cf.multiget(KEYS[:], columns=[long(123)])
             for i in range(3):
                 assert_equal(res.get(KEYS[i]), gdict)
 
-            res = cf.multiget(KEYS[:], super_column=123L)
+            res = cf.multiget(KEYS[:], super_column=long(123))
             for i in range(3):
-                assert_equal(res.get(KEYS[i]), gdict.get(123L))
+                assert_equal(res.get(KEYS[i]), gdict.get(long(123)))
 
-            res = cf.multiget(KEYS[:], super_column=123L, column_start=group.get('cols')[0])
+            res = cf.multiget(KEYS[:], super_column=long(123), column_start=group.get('cols')[0])
             for i in range(3):
-                assert_equal(res.get(KEYS[i]), gdict.get(123L))
+                assert_equal(res.get(KEYS[i]), gdict.get(long(123)))
 
-            res = cf.multiget(KEYS[:], column_start=123L, column_finish=123L)
+            res = cf.multiget(KEYS[:], column_start=long(123), column_finish=long(123))
             for j in range(3):
                 assert_equal(res.get(KEYS[j]), gdict)
 
@@ -551,25 +562,25 @@ class TestSuperSubCFs(unittest.TestCase):
             for sub_res in res:
                 assert_equal(sub_res[1], gdict)
 
-            res = cf.get_range(start=KEYS[0], column_start=123L, column_finish=123L)
+            res = cf.get_range(start=KEYS[0], column_start=long(123), column_finish=long(123))
             for sub_res in res:
                 assert_equal(sub_res[1], gdict)
 
-            res = cf.get_range(start=KEYS[0], columns=[123L])
+            res = cf.get_range(start=KEYS[0], columns=[long(123)])
             for sub_res in res:
                 assert_equal(sub_res[1], gdict)
 
-            res = cf.get_range(start=KEYS[0], super_column=123L)
+            res = cf.get_range(start=KEYS[0], super_column=long(123))
             for sub_res in res:
-                assert_equal(sub_res[1], gdict.get(123L))
+                assert_equal(sub_res[1], gdict.get(long(123)))
 
-            res = cf.get_range(start=KEYS[0], super_column=123L, column_start=group.get('cols')[0])
+            res = cf.get_range(start=KEYS[0], super_column=long(123), column_start=group.get('cols')[0])
             for sub_res in res:
-                assert_equal(sub_res[1], gdict.get(123L))
+                assert_equal(sub_res[1], gdict.get(long(123)))
 
-            res = cf.get_range(start=KEYS[0], super_column=123L, column_finish=group.get('cols')[-1])
+            res = cf.get_range(start=KEYS[0], super_column=long(123), column_finish=group.get('cols')[-1])
             for sub_res in res:
-                assert_equal(sub_res[1], gdict.get(123L))
+                assert_equal(sub_res[1], gdict.get(long(123)))
 
 class TestValidators(unittest.TestCase):
 
@@ -611,9 +622,9 @@ class TestValidators(unittest.TestCase):
         cf = ColumnFamily(pool, 'Validators')
         key = 'key1'
 
-        col = {'long': 1L}
+        col = {'long': long(1)}
         cf.insert(key, col)
-        assert_equal(cf.get(key)['long'], 1L)
+        assert_equal(cf.get(key)['long'], long(1))
 
         col = {'int': 1}
         cf.insert(key, col)
@@ -653,7 +664,7 @@ class TestDefaultValidators(unittest.TestCase):
         cf = ColumnFamily(pool, 'DefaultValidator')
         key = 'key1'
 
-        col_cf = {'aaaaaa': 1L}
+        col_cf = {'aaaaaa': long(1)}
         col_cm = {'subcol': TIME1}
         col_ncf = {'aaaaaa': TIME1}
 
@@ -661,12 +672,12 @@ class TestDefaultValidators(unittest.TestCase):
         #  longs and cm for 'subcol' allows TIMEUUIDs.
         cf.insert(key, col_cf)
         cf.insert(key, col_cm)
-        assert_equal(cf.get(key), {'aaaaaa': 1L, 'subcol': TIME1})
+        assert_equal(cf.get(key), {'aaaaaa': long(1), 'subcol': TIME1})
 
         # Insert multiple columns at once
         col_cf.update(col_cm)
         cf.insert(key, col_cf)
-        assert_equal(cf.get(key), {'aaaaaa': 1L, 'subcol': TIME1})
+        assert_equal(cf.get(key), {'aaaaaa': long(1), 'subcol': TIME1})
 
         assert_raises(TypeError, cf.insert, key, col_ncf)
 
@@ -706,9 +717,9 @@ class TestKeyValidators(unittest.TestCase):
     def setUp(self):
         self.type_groups = []
 
-        long_keys = [1111111111111111L,
-                     2222222222222222L,
-                     3333333333333333L]
+        long_keys = [long(1111111111111111),
+                     long(2222222222222222),
+                     long(3333333333333333)]
         self.type_groups.append((TestKeyValidators.cf_long, long_keys))
 
         int_keys = [1, 2, 3]
@@ -820,7 +831,7 @@ class TestKeyValidators(unittest.TestCase):
         sys.close()
         cf_long = ColumnFamily(pool, 'KeyLongCounter')
 
-        key = 1111111111111111L
+        key = long(1111111111111111)
 
         cf_long.add(key, 'col')
         assert_equal(cf_long.get(key), {'col': 1})

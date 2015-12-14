@@ -4,8 +4,8 @@ available for use by others working with pycassa.
 
 """
 from __future__ import absolute_import
-
 import six
+
 if six.PY2:
     from __builtin__ import int
 else:
@@ -18,7 +18,8 @@ import calendar
 
 __all__ = ['convert_time_to_uuid', 'convert_uuid_to_time', 'OrderedDict']
 
-_number_types = frozenset((int, long, float))
+_number_types = frozenset(list(six.integer_types) + \
+                    list((float,)))
 
 LOWEST_TIME_UUID = uuid.UUID('00000000-0000-1000-8080-808080808080')
 """ The lowest possible TimeUUID, as sorted by Cassandra. """
